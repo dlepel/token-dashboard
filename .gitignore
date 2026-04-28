@@ -8,3 +8,6 @@ node_modules/
 .superpowers/
 .claude/
 docs/superpowers/
+/logs/
+diag_dashboard.ps1
+diag_output.txt
