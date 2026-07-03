@@ -36,6 +36,30 @@ class CostTests(unittest.TestCase):
         c = cost_for("custom-local-model", self._u(input_tokens=9999), self.p)
         self.assertIsNone(c["usd"])
 
+    def test_known_fable_costs(self):
+        c = cost_for("claude-fable-5", self._u(input_tokens=1_000_000, output_tokens=1_000_000), self.p)
+        self.assertAlmostEqual(c["usd"], 60.00, places=4)  # $10 in + $50 out
+        self.assertFalse(c["estimated"])
+
+    def test_fable_billing_flag_present(self):
+        self.assertEqual(self.p["models"]["claude-fable-5"].get("billing"), "usage_credits")
+
+    def test_unknown_fable_falls_back_to_fable_tier(self):
+        c = cost_for("claude-fable-5-20260601", self._u(input_tokens=1_000_000), self.p)
+        self.assertAlmostEqual(c["usd"], 10.00, places=4)
+        self.assertTrue(c["estimated"])
+
+    def test_known_sonnet_5_intro_pricing(self):
+        # Intro pricing $2/$10 through 2026-08-31 (see pricing.json notes)
+        c = cost_for("claude-sonnet-5", self._u(input_tokens=1_000_000, output_tokens=1_000_000), self.p)
+        self.assertAlmostEqual(c["usd"], 12.00, places=4)
+        self.assertFalse(c["estimated"])
+
+    def test_known_opus_4_8_cost(self):
+        c = cost_for("claude-opus-4-8", self._u(input_tokens=1_000_000, output_tokens=1_000_000), self.p)
+        self.assertAlmostEqual(c["usd"], 30.00, places=4)  # $5 in + $25 out
+        self.assertFalse(c["estimated"])
+
     def test_cache_read_cheaper_than_input(self):
         c_in = cost_for("claude-opus-4-7", self._u(input_tokens=1_000_000), self.p)
         c_cr = cost_for("claude-opus-4-7", self._u(cache_read_tokens=1_000_000), self.p)

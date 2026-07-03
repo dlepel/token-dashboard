@@ -76,7 +76,7 @@ export default async function (root) {
       <div class="card kpi cost">
         <div class="label">Est. cost</div>
         <div class="value" title="${fmt.usd(totals.cost_usd)}">${fmt.usd(totals.cost_usd)}</div>
-        ${planSubtitle()}
+        ${planSubtitle(usageCreditCost(byModel))}
       </div>
     </div>
 
@@ -188,9 +188,24 @@ export default async function (root) {
   });
 }
 
-function planSubtitle() {
+// Cost from models billed as metered usage credits (real dollars on top of any
+// subscription — e.g. Fable 5 from 2026-07-08). Flagged via "billing":
+// "usage_credits" in pricing.json; falls back to the fable tier match.
+function usageCreditCost(byModel) {
+  return (byModel || []).reduce((sum, r) => {
+    const entry = state.pricing?.models?.[r.model];
+    const metered = entry ? entry.billing === 'usage_credits'
+                          : fmt.modelClass(r.model) === 'fable';
+    return metered && r.cost_usd != null ? sum + r.cost_usd : sum;
+  }, 0);
+}
+
+function planSubtitle(usageCredits = 0) {
   if (!state.pricing || state.plan === 'api') return '';
   const p = state.pricing.plans[state.plan];
   if (!p || !p.monthly) return '';
-  return `<div class="sub">pay $${p.monthly}/mo on ${fmt.htmlSafe(p.label)}</div>`;
+  const credits = usageCredits > 0
+    ? `<div class="sub" style="color:var(--warn)">+ ${fmt.usd(usageCredits)} usage credits (billed separately)</div>`
+    : '';
+  return `<div class="sub">pay $${p.monthly}/mo on ${fmt.htmlSafe(p.label)}</div>${credits}`;
 }

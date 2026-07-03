@@ -24,7 +24,7 @@ export default async function (root) {
         <thead><tr><th>model</th><th class="num">input</th><th class="num">output</th><th class="num">cache read</th><th class="num">cache 5m</th><th class="num">cache 1h</th></tr></thead>
         <tbody>
           ${Object.entries(cur.pricing.models).map(([k,v]) => `
-            <tr><td><span class="badge ${v.tier}">${k}</span></td>
+            <tr><td><span class="badge ${v.tier}">${k}</span>${v.billing === 'usage_credits' ? ' <span class="badge fable" title="Billed as metered usage credits at API rates, separate from any subscription (from 2026-07-08)">usage credits</span>' : ''}</td>
               <td class="num">$${v.input.toFixed(2)}</td>
               <td class="num">$${v.output.toFixed(2)}</td>
               <td class="num">$${v.cache_read.toFixed(2)}</td>
@@ -33,7 +33,7 @@ export default async function (root) {
             </tr>`).join('')}
         </tbody>
       </table>
-      <p class="muted" style="margin-top:8px;font-size:11px">Rates per 1M tokens, USD.</p>
+      <p class="muted" style="margin-top:8px;font-size:11px">Rates per 1M tokens, USD. Models marked <b>usage credits</b> are billed as real dollars at API rates even on subscription plans (Fable 5 pricing model effective 2026-07-08).</p>
 
       <hr class="divider">
 
